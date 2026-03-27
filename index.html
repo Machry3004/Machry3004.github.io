@@ -1428,7 +1428,7 @@ const formStatus = document.getElementById('form-status');
 const fields = {
   name: { el: document.getElementById('name'), error: document.getElementById('name-error'), validate: v => v.trim().length >= 2 },
   email: { el: document.getElementById('email'), error: document.getElementById('email-error'), validate: v => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v) },
-  subject: { el: document.getElementById('subject'), error: document.getElementById('subject-error'), validate: v => v.trim().length >= 3 },
+  subject: { el: document.getElementById('subject-line'), error: document.getElementById('subject-error'), validate: v => v.trim().length >= 3 },
   message: { el: document.getElementById('message'), error: document.getElementById('message-error'), validate: v => v.trim().length >= 10 }
 };
 
@@ -1541,7 +1541,7 @@ contactForm.addEventListener('submit', async function(e) {
   animP();
 
 })();
-</script>
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
 
 </body>
 </html>
