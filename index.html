@@ -1414,52 +1414,88 @@
     });
   });
 
-  /* ━━━ CONTACT FORM — Validation + Submit ━━━ */
-  const contactForm = document.getElementById('contact-form');
-  const submitBtn = document.getElementById('submit-btn');
-  const formStatus = document.getElementById('form-status');
-  const fields = {
-    name: { el: document.getElementById('name'), error: document.getElementById('name-error'), validate: v => v.trim().length >= 2 },
-    email: { el: document.getElementById('email'), error: document.getElementById('email-error'), validate: v => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v) },
-    'subject-line': { el: document.getElementById('subject-line'), error: document.getElementById('subject-error'), validate: v => v.trim().length >= 3 },
-    message: { el: document.getElementById('message'), error: document.getElementById('message-error'), validate: v => v.trim().length >= 10 }
+  /* ━━━ CONTACT FORM --- Validation + Submit with EmailJS ━━━ */
+
+// Initialize EmailJS with your public key
+emailjs.init({
+  publicKey: "JkbWcQJaphZQKfOw2"  // <-- replace with your EmailJS public key
+});
+
+const contactForm = document.getElementById('contact-form');
+const submitBtn = document.getElementById('submit-btn');
+const formStatus = document.getElementById('form-status');
+
+const fields = {
+  name: { el: document.getElementById('name'), error: document.getElementById('name-error'), validate: v => v.trim().length >= 2 },
+  email: { el: document.getElementById('email'), error: document.getElementById('email-error'), validate: v => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v) },
+  subject: { el: document.getElementById('subject'), error: document.getElementById('subject-error'), validate: v => v.trim().length >= 3 },
+  message: { el: document.getElementById('message'), error: document.getElementById('message-error'), validate: v => v.trim().length >= 10 }
+};
+
+Object.values(fields).forEach(f => {
+  f.el.addEventListener('blur', () => validateField(f));
+  f.el.addEventListener('input', () => { if (f.el.classList.contains('error')) validateField(f); });
+});
+
+function validateField(f) {
+  const valid = f.validate(f.el.value);
+  f.el.classList.toggle('error', !valid);
+  f.error.classList.toggle('show', !valid);
+  return valid;
+}
+
+function validateAll() {
+  let ok = true;
+  Object.values(fields).forEach(f => { if (!validateField(f)) ok = false; });
+  return ok;
+}
+
+function showStatus(msg, type) {
+  formStatus.textContent = msg;
+  formStatus.className = 'form-status show ' + (type === 'success' ? 'success' : 'error-msg');
+}
+
+function hideStatus() { formStatus.className = 'form-status'; }
+
+contactForm.addEventListener('submit', async function(e) {
+  e.preventDefault();
+
+  if (!validateAll()) {
+    showStatus('Please fill all fields correctly.', 'error');
+    return;
+  }
+
+  submitBtn.classList.add('loading');
+  submitBtn.disabled = true;
+  hideStatus();
+
+  // Prepare the data to send
+  const templateParams = {
+    name: fields.name.el.value,
+    email: fields.email.el.value,
+    subject: fields.subject.el.value,
+    message: fields.message.el.value
   };
-  Object.values(fields).forEach(f => {
-    f.el.addEventListener('blur', () => validateField(f));
-    f.el.addEventListener('input', () => { if (f.el.classList.contains('error')) validateField(f); });
-  });
-  function validateField(f) {
-    const valid = f.validate(f.el.value);
-    f.el.classList.toggle('error', !valid);
-    f.error.classList.toggle('show', !valid);
-    return valid;
+
+  try {
+    const response = await emailjs.send(
+      'service_ievyiyi',   // <-- replace with your EmailJS service ID
+      'template_wn9k61t',  // <-- replace with your EmailJS template ID
+      templateParams
+    );
+    console.log('SUCCESS!', response);
+    showStatus('✓ Message sent successfully! I\'ll respond within 24 hours.', 'success');
+    contactForm.reset();
+    // Remove error styling
+    Object.values(fields).forEach(f => { f.el.classList.remove('error'); f.error.classList.remove('show'); });
+  } catch (error) {
+    console.error('FAILED...', error);
+    showStatus('✗ Failed to send. Please email me directly at acharya.manishh@gmail.com', 'error');
+  } finally {
+    submitBtn.classList.remove('loading');
+    submitBtn.disabled = false;
   }
-  function validateAll() {
-    let ok = true;
-    Object.values(fields).forEach(f => { if (!validateField(f)) ok = false; });
-    return ok;
-  }
-  contactForm.addEventListener('submit', async function(e) {
-    e.preventDefault();
-    if (!validateAll()) { showStatus('Please fill all fields correctly.', 'error'); return; }
-    submitBtn.classList.add('loading'); submitBtn.disabled = true; hideStatus();
-    try {
-      const fd = new FormData(contactForm);
-      const res = await fetch(contactForm.action, { method: 'POST', body: fd, headers: { 'Accept': 'application/json' } });
-      if (res.ok) {
-        showStatus('✓ Message sent successfully! I\'ll respond within 24 hours.', 'success');
-        contactForm.reset();
-        Object.values(fields).forEach(f => { f.el.classList.remove('error'); f.error.classList.remove('show'); });
-      } else { throw new Error('Server error'); }
-    } catch (err) {
-      showStatus('✗ Failed to send. Please email me directly at acharya.manishh@gmail.com', 'error');
-    } finally { submitBtn.classList.remove('loading'); submitBtn.disabled = false; }
-  });
-  function showStatus(msg, type) {
-    formStatus.textContent = msg;
-    formStatus.className = 'form-status show ' + (type === 'success' ? 'success' : 'error-msg');
-  }
-  function hideStatus() { formStatus.className = 'form-status'; }
+});
 
   /* ━━━ PARTICLE NETWORK BACKGROUND ━━━ */
   const canvas = document.getElementById('particle-canvas');
