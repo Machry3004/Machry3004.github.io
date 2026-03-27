@@ -1484,12 +1484,12 @@
     hideStatus();
 
     // Prepare the data to send
-    const templateParams = {
-      name: fields.name.el.value,
-      email: fields.email.el.value,
-      subject: fields.subject.el.value,
-      message: fields.message.el.value
-    };
+   const templateParams = {
+    name: fields.name.el.value,
+    email: fields.email.el.value,
+    subject: fields.subject.el.value,
+    message: fields.message.el.value
+};
 
     try {
       const response = await emailjs.send(
